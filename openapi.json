@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Scanner Bagasi API",
-    "description": "API Service untuk mengirim data scan bagasi X-Ray. Server akan otomatis memverifikasi barcode ke sistem TPS.",
+    "description": "API Service untuk mengirim data image bagade ke server Image. Server akan otomatis memverifikasi barcode ke sistem TPS.",
     "version": "1.0.0"
   },
   "servers": [
