@@ -1,0 +1,157 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API Manajemen Buku",
+    "description": "Contoh RESTful API sederhana untuk training",
+    "version": "1.0.0"
+  },
+  "servers": [{ "url": "http://localhost/training_api/topic_3/index.php" }],
+  "paths": {
+    "/books": {
+      "get": {
+        "summary": "Ambil semua buku",
+        "responses": {
+          "200": {
+            "description": "Daftar buku berhasil diambil"
+          }
+        }
+      },
+      "post": {
+        "summary": "Tambah buku baru",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "author"],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "example": "Harry Potter"
+                  },
+                  "author": {
+                    "type": "string",
+                    "example": "JK Rowling"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Buku berhasil ditambahkan"
+          }
+        }
+      }
+    },
+    "/books/{id}": {
+      "get": {
+        "summary": "Ambil 1 buku berdasarkan ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail buku"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update semua data buku",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "author"],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "example": "Harry Potter Revisi"
+                  },
+                  "author": {
+                    "type": "string",
+                    "example": "JK Rowling"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Buku berhasil diupdate"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update sebagian data buku",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "example": "Judul Baru"
+                  },
+                  "author": {
+                    "type": "string",
+                    "example": "Penulis Baru"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Buku berhasil diupdate sebagian"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Hapus buku",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Buku berhasil dihapus"
+          }
+        }
+      }
+    }
+  }
+}
