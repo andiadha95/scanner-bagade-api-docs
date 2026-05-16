@@ -27,13 +27,18 @@
         "type": "apiKey",
         "in": "header",
         "name": "X-API-Key",
-        "description": "API Key untuk autentikasi"
+        "description": "API Key untuk autentikasi. Hubungi admin untuk mendapatkan key."
       }
     },
     "schemas": {
       "ScanRequest": {
         "type": "object",
-        "required": ["scanId", "barcodeScanId", "imageFront", "imageUp"],
+        "required": [
+          "scanId",
+          "barcodeScanId",
+          "imageFront",
+          "imageUp"
+        ],
         "properties": {
           "scanId": {
             "type": "string",
@@ -41,10 +46,27 @@
             "example": "SCAN_CUSTOMER_001",
             "maxLength": 50
           },
+          "scanDateTime": {
+            "type": "string",
+            "description": "Waktu scan (format: Y-m-d H:i:s). Kosongkan untuk menggunakan server time",
+            "example": "2026-05-16 10:30:00"
+          },
           "barcodeScanId": {
             "type": "string",
             "description": "Nomor Barcode / HAWB",
             "example": "B44896729000-001",
+            "maxLength": 50
+          },
+          "entryGate": {
+            "type": "string",
+            "description": "Gate scanner (opsional)",
+            "example": "GATE-A",
+            "maxLength": 50
+          },
+          "entryLine": {
+            "type": "string",
+            "description": "Line scanner (opsional)",
+            "example": "LINE-01",
             "maxLength": 50
           },
           "imageFront": {
@@ -56,50 +78,77 @@
             "type": "string",
             "description": "Gambar X-Ray tampak atas (format Base64)",
             "example": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
-          },
-          "scanDateTime": {
-            "type": "string",
-            "description": "Waktu scan (format: Y-m-d H:i:s). Kosongkan untuk menggunakan server time",
-            "example": "2026-05-16 10:30:00"
-          },
-          "entryGate": {
-            "type": "string",
-            "description": "Gate scanner (opsional)",
-            "example": "GATE-A"
-          },
-          "entryLine": {
-            "type": "string",
-            "description": "Line scanner (opsional)",
-            "example": "LINE-01"
           }
         }
       },
       "ScanResponse": {
         "type": "object",
         "properties": {
-          "status": {"type": "string", "example": "success"},
-          "message": {"type": "string", "example": "Scan saved successfully"},
-          "timestamp": {"type": "string", "example": "2026-05-16 10:30:02"},
+          "status": {
+            "type": "string",
+            "enum": [
+              "success",
+              "error"
+            ],
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Scan saved successfully"
+          },
+          "timestamp": {
+            "type": "string",
+            "example": "2026-05-16 10:30:02"
+          },
           "data": {
             "type": "object",
             "properties": {
-              "scan_id": {"type": "string", "example": "SCAN_CUSTOMER_001"},
-              "barcode": {"type": "string", "example": "B44896729000-001"},
-              "tps_verified": {"type": "string", "enum": ["Y", "N"]},
-              "total_images": {"type": "integer", "example": 2},
+              "scan_id": {
+                "type": "string",
+                "example": "SCAN_CUSTOMER_001"
+              },
+              "barcode": {
+                "type": "string",
+                "example": "B44896729000-001"
+              },
+              "tps_verified": {
+                "type": "string",
+                "enum": [
+                  "Y",
+                  "N"
+                ],
+                "description": "Y = Terverifikasi di TPS, N = Tidak terverifikasi"
+              },
+              "total_images": {
+                "type": "integer",
+                "example": 2
+              },
               "image_front": {
                 "type": "object",
-                "properties": {"url": {"type": "string"}}
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  }
+                }
               },
               "image_up": {
                 "type": "object",
-                "properties": {"url": {"type": "string"}}
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  }
+                }
               },
               "remarks": {
                 "type": "object",
+                "description": "Peringatan jika barcode tidak ditemukan di TPS",
                 "properties": {
-                  "warning": {"type": "boolean"},
-                  "message": {"type": "string"}
+                  "warning": {
+                    "type": "boolean"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -109,15 +158,30 @@
       "ErrorResponse": {
         "type": "object",
         "properties": {
-          "status": {"type": "string", "example": "error"},
-          "message": {"type": "string", "example": "Data already exists"},
-          "timestamp": {"type": "string", "example": "2026-05-16 10:30:02"},
+          "status": {
+            "type": "string",
+            "example": "error"
+          },
+          "message": {
+            "type": "string",
+            "example": "Data already exists"
+          },
+          "timestamp": {
+            "type": "string",
+            "example": "2026-05-16 10:30:02"
+          },
           "data": {
             "type": "object",
             "properties": {
-              "scan_id": {"type": "string"},
-              "barcode": {"type": "string"},
-              "suggestion": {"type": "string"}
+              "scan_id": {
+                "type": "string"
+              },
+              "barcode": {
+                "type": "string"
+              },
+              "suggestion": {
+                "type": "string"
+              }
             }
           }
         }
@@ -127,16 +191,24 @@
   "paths": {
     "/api/scan.php": {
       "post": {
-        "tags": ["Scan"],
+        "tags": [
+          "Scan"
+        ],
         "summary": "Kirim scan bagasi",
         "description": "Endpoint untuk mengirim data scan X-Ray bagasi. Server akan otomatis memverifikasi barcode ke sistem TPS.",
         "operationId": "sendScan",
-        "security": [{"ApiKeyAuth": []}],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {"$ref": "#/components/schemas/ScanRequest"},
+              "schema": {
+                "$ref": "#/components/schemas/ScanRequest"
+              },
               "example": {
                 "scanId": "SCAN_CUSTOMER_001",
                 "barcodeScanId": "B44896729000-001",
@@ -151,7 +223,19 @@
             "description": "Sukses - Scan berhasil disimpan",
             "content": {
               "application/json": {
-                "schema": {"$ref": "#/components/schemas/ScanResponse"}
+                "schema": {
+                  "$ref": "#/components/schemas/ScanResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Sukses - Data berhasil diupdate (scan ID sudah ada dengan barcode berbeda)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScanResponse"
+                }
               }
             }
           },
@@ -159,7 +243,9 @@
             "description": "Gagal - Field wajib tidak lengkap",
             "content": {
               "application/json": {
-                "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
               }
             }
           },
@@ -167,15 +253,29 @@
             "description": "Gagal - API Key tidak valid",
             "content": {
               "application/json": {
-                "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
               }
             }
           },
           "409": {
-            "description": "Gagal - Data sudah ada",
+            "description": "Gagal - Scan ID dan barcode sudah ada",
             "content": {
               "application/json": {
-                "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Gagal - Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
               }
             }
           }
