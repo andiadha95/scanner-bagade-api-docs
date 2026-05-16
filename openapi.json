@@ -1,154 +1,183 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.0.1",
   "info": {
-    "title": "API Manajemen Buku",
-    "description": "Contoh RESTful API sederhana untuk training",
-    "version": "1.0.0"
+    "title": "Scanner Bagasi API",
+    "description": "API Service untuk mengirim data image Scan Bagade. Server akan otomatis memverifikasi barcode ke sistem TPS.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Development Support",
+      "email": "helpdesk@grahasegara.com"
+    }
   },
-  "servers": [{ "url": "http://localhost/training_api/topic_3/index.php" }],
-  "paths": {
-    "/books": {
-      "get": {
-        "summary": "Ambil semua buku",
-        "responses": {
-          "200": {
-            "description": "Daftar buku berhasil diambil"
+  "servers": [
+    {
+      "url": "http://192.168.1.227/scanner-bagade",
+      "description": "Production Server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Scan",
+      "description": "Operasi pengiriman scan bagasi"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API Key untuk autentikasi"
+      }
+    },
+    "schemas": {
+      "ScanRequest": {
+        "type": "object",
+        "required": ["scanId", "barcodeScanId", "imageFront", "imageUp"],
+        "properties": {
+          "scanId": {
+            "type": "string",
+            "description": "ID unik scan (harus unik)",
+            "example": "SCAN_CUSTOMER_001",
+            "maxLength": 50
+          },
+          "barcodeScanId": {
+            "type": "string",
+            "description": "Nomor Barcode / HAWB",
+            "example": "B44896729000-001",
+            "maxLength": 50
+          },
+          "imageFront": {
+            "type": "string",
+            "description": "Gambar X-Ray tampak depan (format Base64)",
+            "example": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+          },
+          "imageUp": {
+            "type": "string",
+            "description": "Gambar X-Ray tampak atas (format Base64)",
+            "example": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+          },
+          "scanDateTime": {
+            "type": "string",
+            "description": "Waktu scan (format: Y-m-d H:i:s). Kosongkan untuk menggunakan server time",
+            "example": "2026-05-16 10:30:00"
+          },
+          "entryGate": {
+            "type": "string",
+            "description": "Gate scanner (opsional)",
+            "example": "GATE-A"
+          },
+          "entryLine": {
+            "type": "string",
+            "description": "Line scanner (opsional)",
+            "example": "LINE-01"
           }
         }
       },
+      "ScanResponse": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string", "example": "success"},
+          "message": {"type": "string", "example": "Scan saved successfully"},
+          "timestamp": {"type": "string", "example": "2026-05-16 10:30:02"},
+          "data": {
+            "type": "object",
+            "properties": {
+              "scan_id": {"type": "string", "example": "SCAN_CUSTOMER_001"},
+              "barcode": {"type": "string", "example": "B44896729000-001"},
+              "tps_verified": {"type": "string", "enum": ["Y", "N"]},
+              "total_images": {"type": "integer", "example": 2},
+              "image_front": {
+                "type": "object",
+                "properties": {"url": {"type": "string"}}
+              },
+              "image_up": {
+                "type": "object",
+                "properties": {"url": {"type": "string"}}
+              },
+              "remarks": {
+                "type": "object",
+                "properties": {
+                  "warning": {"type": "boolean"},
+                  "message": {"type": "string"}
+                }
+              }
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string", "example": "error"},
+          "message": {"type": "string", "example": "Data already exists"},
+          "timestamp": {"type": "string", "example": "2026-05-16 10:30:02"},
+          "data": {
+            "type": "object",
+            "properties": {
+              "scan_id": {"type": "string"},
+              "barcode": {"type": "string"},
+              "suggestion": {"type": "string"}
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/scan.php": {
       "post": {
-        "summary": "Tambah buku baru",
+        "tags": ["Scan"],
+        "summary": "Kirim scan bagasi",
+        "description": "Endpoint untuk mengirim data scan X-Ray bagasi. Server akan otomatis memverifikasi barcode ke sistem TPS.",
+        "operationId": "sendScan",
+        "security": [{"ApiKeyAuth": []}],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["title", "author"],
-                "properties": {
-                  "title": {
-                    "type": "string",
-                    "example": "Harry Potter"
-                  },
-                  "author": {
-                    "type": "string",
-                    "example": "JK Rowling"
-                  }
-                }
+              "schema": {"$ref": "#/components/schemas/ScanRequest"},
+              "example": {
+                "scanId": "SCAN_CUSTOMER_001",
+                "barcodeScanId": "B44896729000-001",
+                "imageFront": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+                "imageUp": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Buku berhasil ditambahkan"
-          }
-        }
-      }
-    },
-    "/books/{id}": {
-      "get": {
-        "summary": "Ambil 1 buku berdasarkan ID",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Detail buku"
-          }
-        }
-      },
-      "put": {
-        "summary": "Update semua data buku",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["title", "author"],
-                "properties": {
-                  "title": {
-                    "type": "string",
-                    "example": "Harry Potter Revisi"
-                  },
-                  "author": {
-                    "type": "string",
-                    "example": "JK Rowling"
-                  }
-                }
+            "description": "Sukses - Scan berhasil disimpan",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/ScanResponse"}
               }
             }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Buku berhasil diupdate"
-          }
-        }
-      },
-      "patch": {
-        "summary": "Update sebagian data buku",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "title": {
-                    "type": "string",
-                    "example": "Judul Baru"
-                  },
-                  "author": {
-                    "type": "string",
-                    "example": "Penulis Baru"
-                  }
-                }
+          },
+          "400": {
+            "description": "Gagal - Field wajib tidak lengkap",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/ErrorResponse"}
               }
             }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Buku berhasil diupdate sebagian"
-          }
-        }
-      },
-      "delete": {
-        "summary": "Hapus buku",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Buku berhasil dihapus"
+          },
+          "401": {
+            "description": "Gagal - API Key tidak valid",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+              }
+            }
+          },
+          "409": {
+            "description": "Gagal - Data sudah ada",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+              }
+            }
           }
         }
       }
